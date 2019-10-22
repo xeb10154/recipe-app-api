@@ -22,7 +22,8 @@ class UserAdmin(BaseUserAdmin):
             'classes': ('wide',),
             'fields': ('email', 'password1', 'password2')
         }),
-        # Comma at the end is essential. Python will think it's an object without the comma
+        # Comma at the end is essential.
+        # Python will think it's an object without the comma
     )
 
 
