@@ -16,6 +16,20 @@ class UserSerializer(serializers.ModelSerializer):
         """Create a new user with encrypte password and return it"""
         return get_user_model().objects.create_user(**validated_data)
 
+    def update(self, instance, validated_data):
+        """Update a user, setting the password correctly and return it"""
+        password = validated_data.pop('password', None)
+        # super() call the parent update() functoin in ModelSerializer,
+        # it then runs the extended functonality we added in this update
+        # function so that the password is removed/popped.
+        user = super().update(instance, validated_data)
+
+        if password:
+            user.set_password(password)
+            user.save()
+
+        return user
+
 
 class AuthTokenSerializer(serializers.Serializer):
     """Serializer for the user authentication object"""
@@ -38,7 +52,7 @@ class AuthTokenSerializer(serializers.Serializer):
             password=password
         )
         if not user:
-            msg = ('Unable to authenticate with provided credentials.')
+            msg = _('Unable to authenticate with provided credentials.')
             # ValidationError method raises a 400_BAD_REQUEST
             raise serializers.ValidationError(msg, code='authentication')
 

@@ -8,6 +8,7 @@ from rest_framework import status
 # Routes to user API endpoints (see urls.py file for route names)
 CREATE_USER_URL = reverse('user:create')
 TOKEN_URL = reverse('user:token')
+ME_URL = reverse('user:me')
 
 
 def create_user(**params):
@@ -92,3 +93,57 @@ class PublicUserApiTests(TestCase):
 
         self.assertNotIn('token', res.data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # This is a test for security to ensure that public unauthorized
+    # GET requests cannot retrieve any user details.
+    def test_retrieve_user_unauthorized(self):
+        """Test that authentication is required for users"""
+        res = self.client.get(ME_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class PrivateUserAPITests(TestCase):
+    """Tests API requests that require authorization"""
+
+    # why is self.name and not just name??? Is name a class attribute?
+    def setUp(self):
+        self.user = create_user(
+            email='raymond@test.com',
+            password='test123',
+            name='raymond'
+        )
+        # The client is setup with a valid user to make authenticated requests
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_retrieve_profile_success(self):
+        """Test retrieving profile for logged in user"""
+
+        res = self.client.get(ME_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, {
+            'email': self.user.email,
+            'name': self.user.name
+        })
+
+    def test_post_me_not_allowed(self):
+        """Test that POST requests are not allowed on the me url"""
+        # Posting an empty object {} to test this
+        res = self.client.post(ME_URL, {})
+
+        self.assertEqual(res.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_update_user_profile(self):
+        """Test updating the user profile for authenticated user"""
+
+        payload = {'name': 'new name', 'password': 'newpassword'}
+
+        res = self.client.patch(ME_URL, payload)
+
+        # Update user object with the latest values from db
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.name, payload['name'])
+        self.assertTrue(self.user.check_password)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
