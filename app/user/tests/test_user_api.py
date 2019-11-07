@@ -106,7 +106,7 @@ class PublicUserApiTests(TestCase):
 class PrivateUserAPITests(TestCase):
     """Tests API requests that require authorization"""
 
-    # why is self.name and not just name??? Is name a class attribute?
+    # TODO: why is self.name and not just name??? Is name a class attribute?
     def setUp(self):
         self.user = create_user(
             email='raymond@test.com',

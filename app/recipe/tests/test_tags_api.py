@@ -43,6 +43,7 @@ class PrivateTagsApiTests(TestCase):
         res = self.client.get(TAGS_URL)
 
         tags = Tag.objects.all().order_by('-name')
+        # TODO: what does many=True mean again?
         serializer = TagSerializer(tags, many=True)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)

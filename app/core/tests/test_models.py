@@ -6,6 +6,8 @@ from core import models
 
 def sample_user(email='raymond@test.com', password='test123'):
     """Create a sample user"""
+    # TODO: Why is the email and passwords parameters
+    # not declared as variables?
     return get_user_model().objects.create_user(email, password)
 
 
@@ -53,3 +55,13 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(str(tag), tag.name)
+
+    def test_ingredient_str(self):
+        """Test the ingredient string representation"""
+
+        ingredient = models.Ingredient.objects.create(
+            user=sample_user(),
+            name='Cucumber'
+        )
+
+        self.assertEqual(str(ingredient), ingredient.name)
