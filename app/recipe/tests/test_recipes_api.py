@@ -165,3 +165,49 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(ingredients.count(), 2)
         self.assertIn(ingredient1, ingredients)
         self.assertIn(ingredient2, ingredients)
+
+    # Dont really need to test update as it's standard/out the box
+    # and should work as expected since no custom logic is written
+    def test_partial_recipe_update(self):
+        """Test updating a recipe with PATCH"""
+        recipe = sampleRecipe(user=self.user)
+        recipe.tags.add(sampleTag(user=self.user))
+        new_tag = sampleTag(user=self.user, name='Curry')
+
+        payload = {
+            'title': 'Chicken Tikka', 'tags': [new_tag.id]
+        }
+
+        url = detail_url(recipe.id)
+        self.client.patch(url, payload)
+
+        # gets latest values form db and updates all objects in runtime
+        recipe.refresh_from_db()
+
+        self.assertEqual(recipe.title, payload['title'])
+        tags = recipe.tags.all()
+        # Can also use .count() instead of len(). Both works.
+        self.assertEqual(len(tags), 1)
+        self.assertIn(new_tag, tags)
+
+    def test_full_update_recipe(self):
+        """Test updating a recipe object PUT"""
+        recipe = sampleRecipe(user=self.user)
+        recipe.tags.add(sampleTag(user=self.user))
+        payload = {
+            'title': 'Spaghetti carbonara',
+            'time_minutes': 25,
+            'price': 5.00
+        }
+        # tags and ingredients fields will be empty if not defined
+        # in payload when sending a PUT request
+        url = detail_url(recipe.id)
+        self.client.put(url, payload)
+
+        recipe.refresh_from_db()
+
+        self.assertEqual(recipe.title, payload['title'])
+        self.assertEqual(recipe.time_minutes, payload['time_minutes'])
+        self.assertEqual(recipe.price, payload['price'])
+        tags = recipe.tags.all()
+        self.assertEqual(len(tags), 0)

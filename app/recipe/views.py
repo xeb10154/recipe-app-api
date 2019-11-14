@@ -58,4 +58,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Create a new recipe"""
+        # perform_create method knows how to create an object from the
+        # assigned model when a POST request is made to this ViewSet.
         serializer.save(user=self.request.user)
