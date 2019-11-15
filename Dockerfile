@@ -3,10 +3,10 @@ MAINTAINER Raymond Yau Solideveloper
 
 ENV PYTHONUNBUFFERED 1
 
-COPY ./requirements.txt /requirements.txt
-RUN apk add --update --no-cache postgresql-client
+COPY ./requirements.txt /requirements.txt 
+RUN apk add --update --no-cache postgresql-client jpeg-dev
 RUN apk add --update --no-cache --virtual .tmp-build-deps \
-    gcc libc-dev linux-headers postgresql-dev
+    gcc libc-dev linux-headers postgresql-dev musl-dev zlib zlib-dev
 RUN pip install -r /requirements.txt
 RUN apk del .tmp-build-deps
 
@@ -14,5 +14,9 @@ RUN mkdir /app
 WORKDIR /app
 COPY ./app /app
 
+RUN mkdir -p /vol/web/media
+RUN mkdir /vol/web/static
 RUN adduser -D raymond
+RUN chown -R raymond:raymond /vol/
+RUN chmod -R 755 /vol/web
 USER raymond
