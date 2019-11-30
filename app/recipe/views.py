@@ -1,4 +1,6 @@
-from rest_framework import viewsets, mixins
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import viewsets, mixins, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
@@ -53,6 +55,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Return appropriate serializer class"""
         if self.action == 'retrieve':
             return serializers.RecipeDetailSerializer
+        elif self.action == 'upload_image':
+            return serializers.RecipeImageSerializer
 
         return self.serializer_class
 
@@ -61,3 +65,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
         # perform_create method knows how to create an object from the
         # assigned model when a POST request is made to this ViewSet.
         serializer.save(user=self.request.user)
+
+    # @action is a way of defining custom funtionalities within a ViewSet other
+    # than the already built in CRUD functions that come with ViewSets.
+    # detail=True means this custom action is only works in the detail view
+    # url_path specifies the action's path i.e api/recipe/detail/1/upload-image
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    def upload_image(self, request, pk=None):
+        # pk is passed in from the detail view where this action is run
+        """Upload an image to a recipe"""
+        # get_object recognises the pk passed from detail view and gets object
+        recipe = self.get_object()
+        serializer = self.get_serializer(
+            recipe,
+            data=request.data
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
