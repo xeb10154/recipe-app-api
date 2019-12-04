@@ -19,7 +19,17 @@ class BaseViewSet(viewsets.GenericViewSet,
     def get_queryset(self):
         """Return objects for the current authenticated user only"""
         # filter takes parameter of currently authenticated logged in user
-        return self.queryset.filter(user=self.request.user).order_by('-name')
+        assigned_only = bool(
+            int(self.request.query_params.get('assigned_only', 0))
+        )
+        queryset = self.queryset
+        if assigned_only:
+            # TODO: How does the filter connect to the Tag/Ingredient?
+            queryset = queryset.filter(recipe__isnull=False)
+        # queryset can return multiple matching entries, so use distinct()
+        return queryset.filter(
+            user=self.request.user
+        ).order_by('-name').distinct()
 
     def perform_create(self, serializer):
         """Create a new object"""
